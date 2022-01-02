@@ -371,109 +371,127 @@
     
   
 (defun odot_test ()
-  (let ((bndl_u (osc_bundle_u_alloc)))
-    (unwind-protect 
-        (let ()
-          (let ((m1 (osc_message_u_alloc))
-                (m2 (osc_message_u_allocWithString "/bar" "whatevs"))
-                (m3 (osc_message_u_allocWithAddress "/bloo"))
-                (a (osc_atom_u_allocWithInt32 12)))
-            (osc_message_u_setAddress m1 "/foo/a")
-            (osc_message_u_appendFloat m1 3.14)
-            (osc_bundle_u_addMsg bndl_u m1)
-            (osc_bundle_u_addMsg bndl_u m2)
-            (osc_message_u_appendAtom m3 a)
-            (osc_bundle_u_addMsg bndl_u m3)
-            (print "U_BUNDLE DONE"))
 
-          (let* ((bndl_s (osc_bundle_u_serialize bndl_u))
-                 (len (osc_bundle_s_getLen bndl_s))
-                 (ptr (osc_bundle_s_getPtr bndl_s)))
-            (print "serialize:")
-            (print len)
-            (print "serialize DONE")
-          
-            ;(let ((len (cffi::mem-aref len_ptr :long))
-            ;      (bndl_uu (cffi::pointer-address (cffi::foreign-alloc :pointer))))
-            ;  (cffi::foreign-free len_ptr)
-            ;  ;(osc_bundle_s_deserialize len buf bndl_uu)
-            ;  (print "DESERIALIZE 2 NOT OK")
-            ;  (cffi::foreign-free buf))
-            
-          ;; iterate over messages in a serialized bundle
-          (let ((b_it_s (osc_bundle_iterator_s_getIterator len ptr))
-                (aa (osc_atom_s_alloc)))
-            (print "S_ITERATOR")
-            (loop while (= 1 (osc_bundle_iterator_s_hasNext b_it_s)) do
-		(let ((m (osc_bundle_iterator_s_next b_it_s)))
-                  (print "------------")
-                  (print (osc_message_s_getAddress m))
-                  (print (list "n args = " (osc_message_s_getArgCount m)))
-                  (let ((m_it_s (osc_message_iterator_s_getIterator m)))
-                      (loop while (= 1 (osc_message_iterator_s_hasNext m_it_s)) do
-                            (let* ((a (osc_message_iterator_s_next m_it_s))
-                                   (type (code-char (osc_atom_s_getTypetag a)))
-                                   (val (case type
-                                          (#\f (osc_atom_s_getFloat a))
-                                          (#\i (osc_atom_s_getInt a))
-                                          (#\s (let* ((n (osc_atom_s_getStringLen a))
-                                                      (out (cffi:foreign-string-alloc "aaaaaaaa")) ; :char :count n))
-                                                      (str nil))
-                                                 (print n)
-                                                 ;(osc_atom_s_getString a n (cffi::make-pointer (cffi::pointer-address out)))
-                                                 ;(dotimes (c n)
-                                                 ;  (print (cffi::mem-aref out :char 0)))
-                                                 (cffi::foreign-string-free out)
-                                                 str))
-                                          (otherwise :unknown-osc-type))))
-                              (print (list type val))))
-                      (osc_message_iterator_u_destroyIterator m_it_s)
-                      )))
-                  ;(osc_message_s_getArg m 0 aa)
-                  ;(print (osc_atom_s_getTypetag aa))
-                  ;(print (osc_atom_s_getStringLen aa))
-                  ;(print (osc_atom_s_getFloat aa))
-                  ;(print (osc_atom_s_getInt aa))
+  (let ((test_bundle '(("/foo/a" 3.14 3.0d0 3)
+                       ("/bar" "whatevs")
+                       ("/bloo" 12))))
+    
+    (print "Creating U_Bundle")      
+    (let ((bndl_u (osc_bundle_u_alloc)))
+      (unwind-protect 
+          (progn
+            ; creating messages with different methods
+            (let* ((msg1 (nth 0 test_bundle))
+                   (msg2 (nth 1 test_bundle))
+                   (msg3 (nth 2 test_bundle))
                   
-            (osc_bundle_iterator_s_destroyIterator b_it_s)
-            (print "S_ITERATOR DONE"))
+                   (m1 (osc_message_u_alloc))
+                   (m2 (osc_message_u_allocWithString (car msg2) (nth 1 msg2)))
+                   (m3 (osc_message_u_allocWithAddress (car msg3))))
 
-          ; turn a serialized bundle into printable text
-	  (let* ((tlen (osc_bundle_s_nformat nil 0 len bndl_s 0))
-                 (text (cffi::foreign-alloc :char :count (1+ tlen))))
-            (osc_bundle_s_nformat text (1+ tlen) len bndl_s 0)
-            (print (list "print serialized text:" tlen))
-            (print (cffi:foreign-string-to-lisp text)))
+              (osc_message_u_setAddress m1 (car msg1))
+              (osc_message_u_appendFloat m1 (nth 1 msg1))
+              (osc_message_u_appendDouble m1 (nth 2 msg1))
+              (osc_message_u_appendInt32 m1 (nth 3 msg1))
+            
+              (let ((a (osc_atom_u_allocWithInt32 12)))
+                (osc_message_u_appendAtom m3 a))
 
-          ;; iterate over messages in an unserialized bundle
-          (let ((b_it_u (osc_bundle_iterator_u_getIterator bndl_u)))
-            (print "U_ITERATOR")
-            (loop while (= 1 (osc_bundle_iterator_u_hasNext b_it_u)) do
-                  (let ((m (osc_bundle_iterator_u_next b_it_u)))
-                    (print (format nil "~S has typetags " (osc_message_u_getAddress m)))
-		; iterate over atoms in list
-                    (let ((m_it_u (osc_message_iterator_u_getIterator m)))
-                      (loop while (= 1 (osc_message_iterator_u_hasNext m_it_u)) do
-                            (let ((a (osc_message_iterator_u_next m_it_u)))
-                              (print (code-char (osc_atom_u_getTypetag a)))))
-                      (osc_message_iterator_u_destroyIterator m_it_u)
-                      )))
-            (osc_bundle_iterator_s_destroyIterator b_it_u)
-            (print "U_ITERATOR DONE"))
+              (osc_bundle_u_addMsg bndl_u m1)
+              (osc_bundle_u_addMsg bndl_u m2)
+              (osc_bundle_u_addMsg bndl_u m3)
+
+              (print "Serializing")
+              (let* ((bndl_s (osc_bundle_u_serialize bndl_u))
+                     (len (osc_bundle_s_getLen bndl_s))
+                     (ptr (osc_bundle_s_getPtr bndl_s)))
+
+                (print (format nil "Serialized bundle length: ~A" len))
           
-          ;(o.send-bundle_s 3000 "localhost" bndl_s)
+                ;(let ((len (cffi::mem-aref len_ptr :long))
+                ;      (bndl_uu (cffi::pointer-address (cffi::foreign-alloc :pointer))))
+                ;  (cffi::foreign-free len_ptr)
+                ;  ;(osc_bundle_s_deserialize len buf bndl_uu)
+                ;  (print "DESERIALIZE 2 NOT OK")
+                ;  (cffi::foreign-free buf))
+            
+                (print "Iterating over serialized bundle messages:")
+          
+                (let ((b_it_s (osc_bundle_iterator_s_getIterator len ptr)))
 
-          (osc_bundle_s_free bndl_s)
-          (print "free bundle_s")
-          ))
-      
-      (osc_bundle_u_free bndl_u)
-      (print "free bundle_u")
-    )))
+                  (loop for i = 0 then (1+ i)
+                        while (= 1 (osc_bundle_iterator_s_hasNext b_it_s))
+                        do
+                        
+                        (assert (< i (length test_bundle)))
+
+                        (let* ((m (osc_bundle_iterator_s_next b_it_s))
+                               (addr (osc_message_s_getAddress m))
+                               (argcount (osc_message_s_getArgCount m)))
+                              
+                          (print (format nil "- Message ~D: ~A (~D arguments)" i addr argcount))
+
+                          (assert (string-equal addr (car (nth i test_bundle))))
+                          (assert (= argcount (length (cdr (nth i test_bundle)))))
+                          
+                          (let ((m_it_s (osc_message_iterator_s_getIterator m)))
+                            (loop for arg = 0 then (+ arg 1)
+                                  while (= 1 (osc_message_iterator_s_hasNext m_it_s)) do
+
+                                  (assert (< arg argcount))
+
+                                  (let* ((a (osc_message_iterator_s_next m_it_s))
+                                         (type (code-char (osc_atom_s_getTypetag a)))
+                                         (val (osc_decode_atom_from_s_data a)))
+                                    (print (list type val))))
+                            
+                            (osc_message_iterator_u_destroyIterator m_it_s)
+                            )))
+                  
+                (osc_bundle_iterator_s_destroyIterator b_it_s)
+                (print "End S_iteration"))
+
+                ;; turn a serialized bundle into printable text (doesn't work)
+                (let* ((tlen (osc_bundle_s_nformat nil 0 len bndl_s 0))
+                       (text (cffi::foreign-alloc :char :count (1+ tlen))))
+                  (osc_bundle_s_nformat text (1+ tlen) len bndl_s 0)
+                  (print (list "print serialized text:" tlen))
+                  (print (cffi:foreign-string-to-lisp text)))
+
+                ;; iterate over messages in an unserialized bundle
+                (let ((b_it_u (osc_bundle_iterator_u_getIterator bndl_u)))
+                  (print "Iterating over unserialized bundle messages:")
+                  (loop for i = 0 then (1+ i)
+                        while (= 1 (osc_bundle_iterator_u_hasNext b_it_u)) do
+
+                        (assert (< i (length test_bundle)))
+                        
+                        (let* ((m (osc_bundle_iterator_u_next b_it_u))
+                               (addr (osc_message_u_getAddress m)))
+                          
+                          (print (format nil "- Message ~D: ~A" i addr))
+                          (assert (string-equal addr (car (nth i test_bundle))))
+                         
+                          ;; iterate over atoms in list
+                          (let ((m_it_u (osc_message_iterator_u_getIterator m)))
+                            (loop while (= 1 (osc_message_iterator_u_hasNext m_it_u)) 
+                                  do (let ((a (osc_message_iterator_u_next m_it_u)))
+                                       (print (code-char (osc_atom_u_getTypetag a)))))
+                            (osc_message_iterator_u_destroyIterator m_it_u)
+                            )))
+                  (osc_bundle_iterator_s_destroyIterator b_it_u)
+                  (print "End U_iteration"))
+  
+                (osc_bundle_s_free bndl_s)
+                (print "Free S_Bundle")
+                ))
+
+            (osc_bundle_u_free bndl_u)
+            (print "Free U_Bundle")
+            )))))
+
 
 ; (odot_test)
-
-;(om::osc-send '("/test" 3) "localhost" 3000)
 
 
 
