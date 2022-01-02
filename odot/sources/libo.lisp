@@ -168,8 +168,6 @@
 (cffi::defcfun ("osc_message_iterator_u_hasNext" osc_message_iterator_u_hasNext) :int (it :pointer))
 (cffi::defcfun ("osc_message_iterator_u_next" osc_message_iterator_u_next) :pointer (it :pointer))
 
-
-;; useful to have this ?
 (cffi::defcstruct _osc_expr (_osc_expr_rec :pointer) (_osc_expr_arg :pointer) (argc :int) (_osc_expr :pointer))
 (cffi::defctype t_osc_expr (:struct _osc_expr))
 
@@ -380,28 +378,11 @@
 ;;; MISC./TESTS
 ;;;================================================
 
-
-;;; doesn't work
-(defun print_bundle_s (bndl_s)
-  (let* ((len (osc_bundle_s_getLen bndl_s))
-         (tlen (osc_bundle_s_nformat nil 0 len bndl_s 0))
-         (text (cffi::foreign-alloc :char :count (1+ tlen))))
-    (osc_bundle_s_nformat text (1+ tlen) len bndl_s 0)
-    (print (list "print serialized text:" tlen))
-    (print (cffi:foreign-string-to-lisp text))
-    (cffi-sys:foreign-free text)
-    t))
-
-
 #|
-; local style
 (let ((o.expr (make_osc_expr "/test = 6")))
   (unwind-protect 
       (print o.expr)
    (free_osc_expr o.expr)))
-
-(let ((o.expr (make_osc_expr "/test = 6")))
-  (print o.expr))
 |#
     
   
@@ -506,11 +487,24 @@
       (print "free bundle_u")
     )))
 
-; (o.test)
+; (odot_test)
 
 ;(om::osc-send '("/test" 3) "localhost" 3000)
 
 
+
+#|
+;;; doesn't work
+(defun print_bundle_s (bndl_s)
+  (let* ((len (osc_bundle_s_getLen bndl_s))
+         (tlen (osc_bundle_s_nformat nil 0 len bndl_s 0))
+         (text (cffi::foreign-alloc :char :count (1+ tlen))))
+    (osc_bundle_s_nformat text (1+ tlen) len bndl_s 0)
+    (print (list "print serialized text:" tlen))
+    (print (cffi:foreign-string-to-lisp text))
+    (cffi-sys:foreign-free text)
+    t))
+|#
 
 
 #|
