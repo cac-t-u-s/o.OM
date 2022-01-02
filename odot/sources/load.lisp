@@ -24,7 +24,7 @@
 (defun load-o-lib ()
   (setf odot::libo
         (om-fi::om-load-foreign-library 
-         "O."
+         "libo"
          `((:macosx ,(merge-pathnames 
                       "lib/mac/libo.dylib" 
                       (om::mypathname (om::find-library "odot"))))
