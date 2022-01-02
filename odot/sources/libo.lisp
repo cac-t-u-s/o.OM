@@ -280,13 +280,6 @@
   (out :pointer))
   
 
-;;; if we want to allocate only one expr 
-(defparameter +global_osc_expr+ nil)
-(defun init_global_osc_expr ()
-  (unless +global_osc_expr+
-    (setf +global_osc_expr+ (cffi:foreign-alloc '(:pointer (:struct _osc_expr)))))
-  +global_osc_expr+)
-
 (defun make_osc_expr (str)
   (handler-bind ((error #'(lambda (e) 
                             (print "ERROR parsing o.expression !")
