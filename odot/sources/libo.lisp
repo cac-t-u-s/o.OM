@@ -286,7 +286,7 @@
     (setf +global_osc_expr+ (cffi:foreign-alloc '(:pointer (:struct _osc_expr)))))
   +global_osc_expr+)
 
-(defun make_osc_expr_2 (str)
+(defun make_osc_expr (str)
   (handler-bind ((error #'(lambda (e) (print "ERROR parsing o.expression !")
                             (abort))))
     (osc_expr_parser_parseExpr_r str)))
@@ -309,7 +309,7 @@
                      (if (= err OSC_ERR_NONE) (cffi:mem-ref bndl_out_* :pointer)
                        (error "Error copying OSC bundle !!")))
                  (osc_bundle_s_allocEmptyBundle)))
-              (osc_expr (make_osc_expr_2 str)))
+              (osc_expr (make_osc_expr str)))
           (unwind-protect 
               ;;; protected form
               (let ((bndl_out_ptr_* (cffi:foreign-alloc :pointer :initial-element (osc_bundle_s_getPtr bndl_out)))
