@@ -173,8 +173,6 @@
 
 (cffi::defcfun ("osc_expr_alloc" osc_expr_alloc) :pointer)
 (cffi::defcfun ("osc_expr_free" osc_expr_free) :void (e :pointer))
-(cffi::defcfun ("osc_expr_parser_parseExpr" osc_expr_parser_parseExprSTR) :int (ptr :pointer) (f (:pointer _osc_expr)))
-
 (cffi::defcfun ("osc_expr_parser_parseExpr_r" osc_expr_parser_parseExpr_rSTR) :pointer (ptr :string) (context :pointer))
 
 (cffi::defcfun ("osc_atom_array_u_free" osc_atom_array_u_free) :void (ar :pointer))
@@ -269,10 +267,6 @@
 ;;; EXPRESSIONS
 ;;;================================================
 
-(defun osc_expr_parser_parseExpr (exprSTR exprSTRUCT)
-  (cffi:with-foreign-string (str exprSTR)
-    (osc_expr_parser_parseExprSTR str exprSTRUCT)))
-
 (defun osc_expr_parser_parseExpr_r (exprSTR)
   (cffi:with-foreign-string (str exprSTR)
     (osc_expr_parser_parseExpr_rSTR str (cffi::null-pointer))))
@@ -291,19 +285,6 @@
   (unless +global_osc_expr+
     (setf +global_osc_expr+ (cffi:foreign-alloc '(:pointer (:struct _osc_expr)))))
   +global_osc_expr+)
-
-(defun make_osc_expr_1 (str)
-  (let ((o.expr_PTR (cffi:foreign-alloc :pointer :initial-element (osc_expr_alloc)))) 
-    (handler-bind ((error #'(lambda (e)
-                              (print e)
-                              (free_osc_expr (cffi:mem-ref o.expr_PTR :pointer)))))
-      (unwind-protect 
-          (let ((err (osc_expr_parser_parseExpr str o.expr_PTR)))
-            (if (= err OSC_ERR_NONE)
-                (cffi:mem-ref o.expr_PTR :pointer)
-              (error (format nil "ERROR parsing o.expression: ~s" str))))
-        (cffi-sys:foreign-free o.expr_PTR)
-      ))))
 
 (defun make_osc_expr_2 (str)
   (handler-bind ((error #'(lambda (e) (print "ERROR parsing o.expression !")
