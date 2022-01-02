@@ -288,7 +288,9 @@
   +global_osc_expr+)
 
 (defun make_osc_expr (str)
-  (handler-bind ((error #'(lambda (e) (print "ERROR parsing o.expression !")
+  (handler-bind ((error #'(lambda (e) 
+                            (print "ERROR parsing o.expression !")
+                            (print e)
                             (abort))))
     (osc_expr_parser_parseExpr_r str)))
 
