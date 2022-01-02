@@ -139,7 +139,8 @@
          (foreign-str (cffi:foreign-alloc :char :count len))
          (foreign-str_PTR (cffi:foreign-alloc :pointer :initial-element foreign-str)))
     (unwind-protect 
-       (let ((i (odot::osc_atom_s_getString atom len foreign-str_PTR)))
+       (progn 
+         (odot::osc_atom_s_getString atom len foreign-str_PTR)
          (cffi:foreign-string-to-lisp (cffi:mem-ref foreign-str_PTR :pointer) :count len))
       (cffi-sys:foreign-free foreign-str)
       (cffi-sys:foreign-free foreign-str_PTR))))
