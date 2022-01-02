@@ -177,8 +177,7 @@
 (cffi::defcfun ("osc_expr_free" osc_expr_free) :void (e :pointer))
 (cffi::defcfun ("osc_expr_parser_parseExpr" osc_expr_parser_parseExprSTR) :int (ptr :pointer) (f (:pointer _osc_expr)))
 
-(cffi::defcfun ("osc_expr_parser_parseExpr_jean" osc_expr_parser_parseExprSTR_jean) :pointer (ptr :string))
-;(:reference-pass (:ef-mb-string :external-format #+cocoa :macos-roman #-cocoa :latin-1))
+(cffi::defcfun ("osc_expr_parser_parseExpr_r" osc_expr_parser_parseExpr_rSTR) :pointer (ptr :string) (context :pointer))
 
 (cffi::defcfun ("osc_atom_array_u_free" osc_atom_array_u_free) :void (ar :pointer))
 
@@ -276,9 +275,9 @@
   (cffi:with-foreign-string (str exprSTR)
     (osc_expr_parser_parseExprSTR str exprSTRUCT)))
 
-(defun osc_expr_parser_parseExpr_jean (exprSTR)
+(defun osc_expr_parser_parseExpr_r (exprSTR)
   (cffi:with-foreign-string (str exprSTR)
-    (osc_expr_parser_parseExprSTR_jean str)))
+    (osc_expr_parser_parseExpr_rSTR str (cffi::null-pointer))))
    
 (cffi::defcfun ("osc_expr_next" osc_expr_next) :pointer (e (:pointer t_osc_expr)))
 (cffi::defcfun ("osc_expr_eval" osc_expr_eval) :int 
@@ -311,7 +310,7 @@
 (defun make_osc_expr_2 (str)
   (handler-bind ((error #'(lambda (e) (print "ERROR parsing o.expression !")
                             (abort))))
-    (osc_expr_parser_parseExpr_jean str)))
+    (osc_expr_parser_parseExpr_r str)))
 
 
 (defun free_osc_expr (expr)
