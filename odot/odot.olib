@@ -10,14 +10,14 @@
 ;   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
 ;
 ;============================================================================
-; J. Bresson, J. MacCallum (2016-2019)
+; J. Bresson, J. MacCallum (2016-2022)
 ;============================================================================
 
 (:om-lib
  
  (:version 1.0)
 
- (:doc "An implementation fo the odot OSC toolkit in OM7 (using CNMAT's libo)")
+ (:doc "An implementation of the odot OSC toolkit in OM# (using CNMAT's libo)")
 
  (:author "J. Bresson, J. MacCallum, IRCAM / CNMAT")
 
